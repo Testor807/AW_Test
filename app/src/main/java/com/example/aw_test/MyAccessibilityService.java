@@ -12,6 +12,10 @@ import com.example.aw_test.Package.Youtube;
 import java.util.List;
 
 public class MyAccessibilityService extends AccessibilityService {
+
+    //Log.d(TAG, "This is a debug message");
+    //Log.i(TAG, "This is an info message");
+    //Log.e(TAG, "This is an error message");
     protected Youtube youtube;
     @Override
     public void onServiceConnected() {

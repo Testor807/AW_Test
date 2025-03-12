@@ -53,7 +53,8 @@ public class MainActivity extends AppCompatActivity {
             pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
             Intent intent = pm.getLaunchIntentForPackage(packageName);
             if (intent != null) {
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
             }
         } catch (PackageManager.NameNotFoundException e) {
