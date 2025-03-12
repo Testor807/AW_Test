@@ -13,32 +13,38 @@ import java.util.List;
 
 public class MyAccessibilityService extends AccessibilityService {
 
+    private static final String TAG = "MyAccessibilityService";
     //Log.d(TAG, "This is a debug message");
     //Log.i(TAG, "This is an info message");
     //Log.e(TAG, "This is an error message");
     protected Youtube youtube;
-    @Override
-    public void onServiceConnected() {
-        AccessibilityServiceInfo info = new AccessibilityServiceInfo();
-        info.eventTypes = AccessibilityEvent.TYPE_VIEW_CLICKED | AccessibilityEvent.TYPE_VIEW_FOCUSED;
-        info.feedbackType = AccessibilityServiceInfo.FEEDBACK_SPOKEN;
-        info.notificationTimeout = 100;
-        info.packageNames = new String[]{"com.example.android.youtube"};
-        info.flags = AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS;
-        setServiceInfo(info);
-        Log.d("AccessibilityService", "Service Started");
-        youtube = new Youtube();
-    }
+
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+        // 打印事件类型和包名
+        //Log.d(TAG, "onAccessibilityEvent: Event Type = " + event.getEventType());
+        //Log.d(TAG, "onAccessibilityEvent: Package Name = " + event.getPackageName());
+
+        // 可以根据事件类型处理不同的逻辑
+        switch (event.getEventType()) {
+            case AccessibilityEvent.TYPE_VIEW_CLICKED:
+                Log.d(TAG, "View Clicked");
+                break;
+            case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
+                Log.d(TAG, "Window State Changed");
+                break;
+            // 其他事件类型...
+        }
+    }
+    public void onAccessibilityEvent2(AccessibilityEvent event) {
         // 处理可访问性事件
-        String packageName = event.getPackageName().toString();
-        System.out.println("Checking");
-        if (packageName.equals("com.google.android.youtube")) {
-            //AccessibilityNodeInfo rootNode = getRootInActiveWindow();
-            //youtube.YoutubeListener("Appium",rootNode);
-            System.out.println("Youtube Starting");
-            performSearch("Appium");
+        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            Log.d("AccessibilityService","Page Changed!");
+            String packageName = event.getPackageName().toString();
+            if (packageName.equals("com.google.android.youtube")) {
+                Log.d("AccessibilityService","Youtube Searching");
+                performSearch("Appium");
+            }
         }
     }
 
@@ -68,7 +74,21 @@ public class MyAccessibilityService extends AccessibilityService {
 
     @Override
     public void onInterrupt() {
+        Log.d(TAG, "onInterrupt: Service Interrupted");
+    }
 
+    @Override
+    public void onServiceConnected() {
+        super.onServiceConnected();
+        AccessibilityServiceInfo info = new AccessibilityServiceInfo();
+        info.eventTypes = AccessibilityEvent.TYPE_VIEW_CLICKED | AccessibilityEvent.TYPE_VIEW_FOCUSED;
+        info.feedbackType = AccessibilityServiceInfo.FEEDBACK_SPOKEN;
+        info.notificationTimeout = 100;
+        info.packageNames = new String[]{"com.example.android.youtube"};
+        info.flags = AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS;
+        setServiceInfo(info);
+        Log.d(TAG,"Service Started");
+        //youtube = new Youtube();
     }
 
 }

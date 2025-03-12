@@ -15,16 +15,16 @@
         android:theme="@style/Theme.AW_Test"
         tools:targetApi="31">
 
-        <service android:name=".MyAccessibilityService"
+        <service
+            android:name=".MyAccessibilityService"
             android:exported="false"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            android:label="@string/accessibility_service_label">
-            <meta-data
-                android:name="android.accessibility service"
-                android:resource="@xml/accessibility_service_config" />
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
         </service>
 
         <service android:name="com.example.aw_test.FloatService" />
@@ -33,7 +33,6 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
