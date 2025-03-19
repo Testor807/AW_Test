@@ -9,8 +9,6 @@ import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.example.aw_test.Package.Youtube;
 
-import java.util.List;
-
 public class MyAccessibilityService extends AccessibilityService {
 
     private static final String TAG = "MyAccessibilityService";
@@ -32,39 +30,38 @@ public class MyAccessibilityService extends AccessibilityService {
                 break;
             case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
                 Log.d(TAG, "Window State Changed");
-                break;
-            // 其他事件类型...
+                AccessibilityNodeInfo source = event.getSource();
+
+                if (source != null) {
+                    CharSequence packageName = source.getPackageName();
+                    if (event.getEventType() == event.TYPE_WINDOW_STATE_CHANGED) {
+
+                        //获取当前窗口activity名
+                        ComponentName componentName = new ComponentName(
+                                event.getPackageName().toString(),
+                                event.getClassName().toString()
+                        );
+                        try {
+                            String activityName = getPackageManager().getActivityInfo(componentName, 0).toString();
+                            activityName = activityName.substring(activityName.indexOf(" "), activityName.indexOf("}"));
+                            Log.e("Current Windows Activity", "=======" + activityName);
+                        } catch (PackageManager.NameNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    break;
+                    // 其他事件类型...
+                }
         }
+    }
+    public void getCurrentPage (AccessibilityEvent event){
     }
 
     @Override
-    public void onInterrupt() {
+    public void onInterrupt (){
 
     }
-
-    public void getCurrentPage(AccessibilityEvent event) {
-        AccessibilityNodeInfo source = event.getSource();
-
-        if (source != null) {
-            CharSequence packageName = source.getPackageName();
-            if (event.getEventType() == event.TYPE_WINDOW_STATE_CHANGED) {
-
-                //获取当前窗口activity名
-                ComponentName componentName = new ComponentName(
-                        event.getPackageName().toString(),
-                        event.getClassName().toString()
-                );
-                try {
-                    String activityName = getPackageManager().getActivityInfo(componentName, 0).toString();
-                    activityName = activityName.substring(activityName.indexOf(" "), activityName.indexOf("}"));
-                    Log.e("当前窗口activity", "=================" + activityName);
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
 
 
 }
