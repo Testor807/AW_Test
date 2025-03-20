@@ -1,5 +1,7 @@
 package com.example.aw_test;
 
+import static com.example.aw_test.KeyboardSimulator.*;
+
 import android.accessibilityservice.AccessibilityService;
 import android.content.ComponentName;
 import android.content.pm.PackageManager;
@@ -16,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 public class MyAccessibilityService extends AccessibilityService {
 
     private static final String TAG = "MyAccessibilityService";
+    private KeyboardSimulator keyboardSimulator;
     //Log.d(TAG, "This is a debug message");
     //Log.i(TAG, "This is an info message");
     //Log.e(TAG, "This is an error message");
@@ -50,12 +53,31 @@ public class MyAccessibilityService extends AccessibilityService {
                             Log.e(TAG, "=======" + activityName);
 
                             TimeUnit.SECONDS.sleep(5);
-                            AccessibilityNodeInfo nodes = getRootInActiveWindow();
-                            List<AccessibilityNodeInfo> searchBoxes = nodes.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/menu_item_view");
-                            if (searchBoxes  != null) {
-                                Log.d(TAG,"ExistsNodeOrChildren" + searchBoxes.size());
+                            if(activityName.equals(" com.google.android.apps.youtube.app.watchwhile.MainActivity")){
+                                AccessibilityNodeInfo nodes = getRootInActiveWindow();
+                                List<AccessibilityNodeInfo> searchBoxes = nodes.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/menu_item_view");
+                                if (searchBoxes  != null) {
+                                    Log.d(TAG,"ExistsNodeOrChildren " + searchBoxes.size());
+                                    searchBoxes.get(1).performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+                                    searchBoxes.get(1).performAction(AccessibilityNodeInfo.ACTION_CLICK);
+
+                                    List<AccessibilityNodeInfo> textBox = nodes.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/search_edit_text");
+                                    if (textBox  != null) {
+                                        textBox.get(0).performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+                                        Bundle arguments = new Bundle();
+                                        arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, "Appium");
+                                        textBox.get(0).performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);
+                                        // 模拟按下 Enter 键
+                                        keyboardSimulator = new KeyboardSimulator();
+                                        // 模拟按下 Enter 键
+                                        keyboardSimulator.sendEnterKey();
+                                    }
+
+                                }else{
+                                    Log.d(TAG,"The node being not found!");
+                                }
                             }else{
-                                Log.d(TAG,"The node being not found!");
+                                Log.d(TAG,"Another Activity");
                             }
                         } catch (PackageManager.NameNotFoundException e) {
                             e.printStackTrace();
@@ -75,6 +97,14 @@ public class MyAccessibilityService extends AccessibilityService {
     @Override
     public void onInterrupt (){
 
+    }
+
+    @Override
+    public void onDestroy() {
+        if (keyboardSimulator != null) {
+            keyboardSimulator.release();
+        }
+        super.onDestroy();
     }
 
 
