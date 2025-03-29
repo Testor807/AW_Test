@@ -38,5 +38,13 @@
         android:textSize="24sp"
         android:enabled="false"
         android:text="Launch Youtube" />
+    <Button
+        android:id="@+id/btn2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textSize="24sp"
+        android:enabled="false"
+        android:text="Launch Damai" />
 
 </LinearLayout>

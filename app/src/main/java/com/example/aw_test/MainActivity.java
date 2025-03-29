@@ -14,7 +14,7 @@ import android.widget.TextView;
 public class MainActivity extends AppCompatActivity {
 
     private TextView text;
-    private Button btn, btnLaunch;
+    private Button btn, btnLaunch, btn2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,12 +24,14 @@ public class MainActivity extends AppCompatActivity {
         text = findViewById(R.id.txt);
         btn = findViewById(R.id.btn);
         btnLaunch = findViewById(R.id.btn_launch);
+        btn2 = findViewById(R.id.btn2);
 
         updateUIState(checkAccessibilityPermission());
 
         btn.setOnClickListener(view -> startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)));
 
         btnLaunch.setOnClickListener(view -> launchApp("com.google.android.youtube"));
+        btn2.setOnClickListener(view -> launchApp("cn.damai"));
 
         AccessibilityManager accessibilityManager = (AccessibilityManager) getSystemService(Context.ACCESSIBILITY_SERVICE);
         accessibilityManager.addAccessibilityStateChangeListener(this::updateUIState);
@@ -40,10 +42,12 @@ public class MainActivity extends AppCompatActivity {
             text.setText("The Accessibility Service has been started");
             btn.setEnabled(false);
             btnLaunch.setEnabled(true);
+            btn2.setEnabled(true);
         } else {
             text.setText("The Accessibility Service has been closed");
             btn.setEnabled(true);
             btnLaunch.setEnabled(false);
+            btn2.setEnabled(false);
         }
     }
 
