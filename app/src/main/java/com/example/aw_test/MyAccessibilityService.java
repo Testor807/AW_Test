@@ -118,4 +118,29 @@ public class MyAccessibilityService extends AccessibilityService {
     public void onInterrupt (){
 
     }
+
+    public List<AccessibilityNodeInfo> findNodesByClassName(AccessibilityNodeInfo rootNode, String className) {
+        List<AccessibilityNodeInfo> result = new ArrayList<>();
+        traverseNodeTree(rootNode, className, result);
+        return result;
+    }
+
+    private void traverseNodeTree(AccessibilityNodeInfo node, String targetClassName, List<AccessibilityNodeInfo> result) {
+        if (node == null) return;
+        
+        // 檢查當前節點是否符合條件
+        CharSequence nodeClassName = node.getClassName();
+        if (nodeClassName != null && nodeClassName.toString().equals(targetClassName)) {
+            result.add(node);
+        }
+    
+        // 遞歸檢查子節點
+        for (int i = 0; i < node.getChildCount(); i++) {
+            AccessibilityNodeInfo childNode = node.getChild(i);
+            if (childNode != null) {
+                traverseNodeTree(childNode, targetClassName, result);
+                childNode.recycle(); // 重要：回收子節點
+            }
+        }
+    }
 }
