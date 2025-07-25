@@ -1,8 +1,11 @@
 package com.example.aw_test;
 
 import android.accessibilityservice.AccessibilityService;
+import android.accessibilityservice.GestureDescription;
 import android.content.ComponentName;
 import android.content.pm.PackageManager;
+import android.graphics.Path;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
@@ -10,16 +13,19 @@ import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.example.aw_test.Package.Youtube;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class MyAccessibilityService extends AccessibilityService {
 
     private static final String TAG = "MyAccessibilityService";
+    private static int state = 0;
     //Log.d(TAG, "This is a debug message");
     //Log.i(TAG, "This is an info message");
     //Log.e(TAG, "This is an error message");
     protected Youtube youtube;
+    protected String activityName;
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
@@ -35,7 +41,6 @@ public class MyAccessibilityService extends AccessibilityService {
             case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
                 Log.d(TAG, "Window State Changed");
                 AccessibilityNodeInfo source = event.getSource();
-                youtube = new Youtube();
                 if (source != null) {
                     CharSequence packageName = source.getPackageName();
                     if (event.getEventType() == event.TYPE_WINDOW_STATE_CHANGED) {
@@ -44,17 +49,27 @@ public class MyAccessibilityService extends AccessibilityService {
                                 event.getPackageName().toString(),
                                 event.getClassName().toString()
                         );
+                        //Log.e(TAG, event.getClassName().toString());
                         try {
-                            String activityName = getPackageManager().getActivityInfo(componentName, 0).toString();
-                            activityName = activityName.substring(activityName.indexOf(" "), activityName.indexOf("}"));
-                            Log.e(TAG, "=======" + activityName);
+                            if(state == 0 ){
+                                activityName = getPackageManager().getActivityInfo(componentName, 0).toString();
+                                activityName = activityName.substring(activityName.indexOf(" "), activityName.indexOf("}"));
+                                Log.e(TAG, "=======" + activityName);
+                            }else{
+                                activityName = "";
+                            }
 
                             TimeUnit.SECONDS.sleep(5);
                             if (activityName.equals(" com.google.android.apps.youtube.app.watchwhile.MainActivity")) {
+                                Log.e(TAG, "Arrived");
+                                //performYouTubeSearchClick(1104,84);
+                                state+=1;
+
                                 AccessibilityNodeInfo nodes = getRootInActiveWindow();
                                 List<AccessibilityNodeInfo> searchBoxes = nodes.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/menu_item_view");
                                 if (searchBoxes != null) {
                                     Log.d(TAG, "ExistsNodeOrChildren " + searchBoxes.size());
+                                    /**
                                     searchBoxes.get(1).performAction(AccessibilityNodeInfo.ACTION_FOCUS);
                                     searchBoxes.get(1).performAction(AccessibilityNodeInfo.ACTION_CLICK);
 
@@ -65,37 +80,51 @@ public class MyAccessibilityService extends AccessibilityService {
                                         arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, "Appium");
                                         textBox.get(0).performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);
                                     }
+                                     **/
 
                                 } else {
                                     Log.d(TAG, "The node being not found!");
                                 }
-                            }else if(activityName.equals(" cn.damai.homepage.MainActivity")){
-                                AccessibilityNodeInfo nodes = getRootInActiveWindow();
-                                List<AccessibilityNodeInfo> searchBoxes = nodes.findAccessibilityNodeInfosByViewId("cn.damai:id/homepage_header_search_btn");
-                                //List<AccessibilityNodeInfo> searchBoxes = nodes.findAccessibilityNodeInfosByViewId("cn.damai:id/homepage_header_search");
-                                if (searchBoxes != null) {
-                                    Log.d(TAG, "ExistsNodeOrChildren " + searchBoxes.size());
-                                    if (searchBoxes.get(0).isClickable() ||
-                                            searchBoxes.get(0).isFocusable() ||
-                                            searchBoxes.get(0).isLongClickable() ||
-                                            searchBoxes.get(0).isCheckable()) {
-                                        Log.d(TAG, "The node is clickable!");
-                                        Log.d(TAG, searchBoxes.get(0).toString());
-                                        searchBoxes.get(0).performAction(AccessibilityNodeInfo.ACTION_FOCUS);
-                                        searchBoxes.get(0).performAction(AccessibilityNodeInfo.ACTION_CLICK);
 
-                                    } else {
-                                        Log.d(TAG, "The node is not clickable!");
-                                        Log.d(TAG, searchBoxes.get(0).toString());
-                                    }
-                                    //searchBoxes.get(0).performAction(AccessibilityNodeInfo.ACTION_FOCUS);
-                                    //searchBoxes.get(0).performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                                }
-                                else {
-                                    Log.d(TAG, "The node being not found!");
-                                }
                             }else if(activityName.equals(" cn.damai.homepage.MainActivity")){
-                                    AccessibilityNodeInfo nodes = getRootInActiveWindow();
+                                AccessibilityNodeInfo rootNode = getRootInActiveWindow();
+                                // 查找所有匹配类名的节点
+                                List<AccessibilityNodeInfo> nodes = findNodesByClassName(rootNode, "android.view.ViewGroup");
+                                state = 0;
+                                // 处理找到的节点
+                                for (AccessibilityNodeInfo node : nodes) {
+                                    // 执行操作，例如点击
+                                    if (node.isClickable()) {
+                                        state+=1;
+                                    }
+
+                                    // 获取其他信息
+                                    //CharSequence text = node.getText();
+                                    //CharSequence contentDescription = node.getContentDescription();
+                                    Rect bounds = new Rect();
+                                    node.getBoundsInScreen(bounds);
+
+                                    // 计算中心点坐标
+                                    int centerX = bounds.centerX();
+                                    int centerY = bounds.centerY();
+
+                                    // 获取节点文本
+                                    CharSequence text = node.getText();
+
+                                    Log.d(TAG, "按钮文本: " + text +
+                                            ", 位置: (" + bounds.left + "," + bounds.top + ")-(" +
+                                            bounds.right + "," + bounds.bottom + ")" +
+                                            ", 中心点: (" + centerX + "," + centerY + ")");
+                                    Log.d(TAG, "Found clickable nodes: " +state);
+
+                                    // 记得回收节点
+                                    node.recycle();
+                                }
+
+                                // 回收根节点
+                                rootNode.recycle();
+
+
                             }else{
                                 Log.d(TAG,"Another Activity");
                             }
@@ -111,35 +140,74 @@ public class MyAccessibilityService extends AccessibilityService {
                 }
         }
     }
-    public void getCurrentPage (AccessibilityEvent event){
-    }
 
     @Override
     public void onInterrupt (){
 
     }
 
-    public List<AccessibilityNodeInfo> findNodesByClassName(AccessibilityNodeInfo rootNode, String className) {
+    private void performYouTubeSearchClick(float x, float y) {
+        Path clickPath = new Path();
+        clickPath.moveTo(x, y);
+
+        GestureDescription.Builder builder = new GestureDescription.Builder();
+        builder.addStroke(new GestureDescription.StrokeDescription(
+                clickPath, 0, 5)); // 100ms點擊持續時間
+
+        boolean dispatched = dispatchGesture(builder.build(), new GestureResultCallback() {
+            @Override
+            public void onCompleted(GestureDescription gestureDescription) {
+                super.onCompleted(gestureDescription);
+                Log.i(TAG, "Handle Successful");
+            }
+
+            @Override
+            public void onCancelled(GestureDescription gestureDescription) {
+                super.onCancelled(gestureDescription);
+                Log.e(TAG, "Handle Cancel");
+            }
+        }, null);
+
+        if (!dispatched) {
+            Log.e(TAG, "Search Handle is false");
+        }
+    }
+
+
+    /**
+    * 通过类名查找所有匹配的节点
+     * * @param root 根节点
+     * @param className 要查找的类名
+     * @return 匹配的节点列表
+     */
+    private List<AccessibilityNodeInfo> findNodesByClassName(AccessibilityNodeInfo root, String className) {
         List<AccessibilityNodeInfo> result = new ArrayList<>();
-        traverseNodeTree(rootNode, className, result);
+        findNodesByClassNameRecursive(root, className, result);
         return result;
     }
 
-    private void traverseNodeTree(AccessibilityNodeInfo node, String targetClassName, List<AccessibilityNodeInfo> result) {
-        if (node == null) return;
-        
-        // 檢查當前節點是否符合條件
-        CharSequence nodeClassName = node.getClassName();
-        if (nodeClassName != null && nodeClassName.toString().equals(targetClassName)) {
-            result.add(node);
+    /**
+     * 递归查找匹配类名的节点
+     */
+    private void findNodesByClassNameRecursive(AccessibilityNodeInfo node, String className, List<AccessibilityNodeInfo> result) {
+        if (node == null) {
+            return;
         }
-    
-        // 遞歸檢查子節點
+
+        // 检查当前节点是否匹配
+        if (className.equals(node.getClassName())) {
+            // 创建节点副本添加到结果中（因为原始节点会在遍历后被回收）
+            AccessibilityNodeInfo copy = AccessibilityNodeInfo.obtain(node);
+            result.add(copy);
+        }
+
+        // 递归检查子节点
         for (int i = 0; i < node.getChildCount(); i++) {
-            AccessibilityNodeInfo childNode = node.getChild(i);
-            if (childNode != null) {
-                traverseNodeTree(childNode, targetClassName, result);
-                childNode.recycle(); // 重要：回收子節點
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                findNodesByClassNameRecursive(child, className, result);
+                // 回收子节点（因为我们创建了副本）
+                child.recycle();
             }
         }
     }
