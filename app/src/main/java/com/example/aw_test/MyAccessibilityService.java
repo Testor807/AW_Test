@@ -7,6 +7,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -15,6 +17,7 @@ import com.example.aw_test.Package.Youtube;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class MyAccessibilityService extends AccessibilityService {
@@ -26,6 +29,7 @@ public class MyAccessibilityService extends AccessibilityService {
     //Log.e(TAG, "This is an error message");
     protected Youtube youtube;
     protected String activityName;
+    protected AccessibilityNodeInfo rootNode;
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
@@ -51,13 +55,10 @@ public class MyAccessibilityService extends AccessibilityService {
                         );
                         //Log.e(TAG, event.getClassName().toString());
                         try {
-                            if(state == 0 ){
-                                activityName = getPackageManager().getActivityInfo(componentName, 0).toString();
-                                activityName = activityName.substring(activityName.indexOf(" "), activityName.indexOf("}"));
-                                Log.e(TAG, "=======" + activityName);
-                            }else{
-                                activityName = "";
-                            }
+                            // 直接从event获取Activity名称
+                            String activityName = Objects.requireNonNull(event.getClassName()).toString();
+
+                            Log.d(TAG, "Current Activity: " + activityName);
 
                             TimeUnit.SECONDS.sleep(5);
                             if (activityName.equals(" com.google.android.apps.youtube.app.watchwhile.MainActivity")) {
@@ -65,8 +66,8 @@ public class MyAccessibilityService extends AccessibilityService {
                                 //performYouTubeSearchClick(1104,84);
                                 state+=1;
 
-                                AccessibilityNodeInfo nodes = getRootInActiveWindow();
-                                List<AccessibilityNodeInfo> searchBoxes = nodes.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/menu_item_view");
+                                rootNode = getRootInActiveWindow();
+                                List<AccessibilityNodeInfo> searchBoxes = rootNode.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/menu_item_view");
                                 if (searchBoxes != null) {
                                     Log.d(TAG, "ExistsNodeOrChildren " + searchBoxes.size());
                                     /**
@@ -86,8 +87,8 @@ public class MyAccessibilityService extends AccessibilityService {
                                     Log.d(TAG, "The node being not found!");
                                 }
 
-                            }else if(activityName.equals(" cn.damai.homepage.MainActivity")){
-                                AccessibilityNodeInfo rootNode = getRootInActiveWindow();
+                            }else if(activityName.equals("cn.damai.homepage.MainActivity")){
+                                rootNode = getRootInActiveWindow();
                                 // 查找所有匹配类名的节点
                                 List<AccessibilityNodeInfo> nodes = findNodesByClassName(rootNode, "android.view.ViewGroup");
                                 state = 0;
@@ -98,9 +99,9 @@ public class MyAccessibilityService extends AccessibilityService {
                                         state+=1;
                                     }
 
-                                    // 获取其他信息
-                                    //CharSequence text = node.getText();
-                                    //CharSequence contentDescription = node.getContentDescription();
+                                    /* 获取其他信息
+                                    *CharSequence text = node.getText();
+                                    *CharSequence contentDescription = node.getContentDescription();*/
                                     Rect bounds = new Rect();
                                     node.getBoundsInScreen(bounds);
 
@@ -109,29 +110,67 @@ public class MyAccessibilityService extends AccessibilityService {
                                     int centerY = bounds.centerY();
 
                                     // 获取节点文本
-                                    CharSequence text = node.getText();
+                                    /*CharSequence text = node.getText();
 
-                                    Log.d(TAG, "按钮文本: " + text +
-                                            ", 位置: (" + bounds.left + "," + bounds.top + ")-(" +
-                                            bounds.right + "," + bounds.bottom + ")" +
-                                            ", 中心点: (" + centerX + "," + centerY + ")");
-                                    Log.d(TAG, "Found clickable nodes: " +state);
+                                    *Log.d(TAG, "按钮文本: " + text +
+                                    *       ", 位置: (" + bounds.left + "," + bounds.top + ")-(" +
+                                    *        bounds.right + "," + bounds.bottom + ")" +
+                                    *        ", 中心点: (" + centerX + "," + centerY + ")");
+                                    *Log.d(TAG, "Found clickable nodes: " +state);*/
 
                                     // 记得回收节点
-                                    node.recycle();
+                                    //node.recycle();
                                 }
+                                nodes.get(0).performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+                                nodes.get(0).performAction(AccessibilityNodeInfo.ACTION_CLICK);
 
                                 // 回收根节点
                                 rootNode.recycle();
 
 
+                            }else if(activityName.equals("com.alibaba.pictures.bricks.search.v2.SearchActivity")) {
+                                Log.d(TAG,"In SearchActivity");
+                                rootNode = getRootInActiveWindow();
+                                List<AccessibilityNodeInfo> textInfo = rootNode.findAccessibilityNodeInfosByViewId("cn.damai:id/header_search_v2_input");
+                                if (textInfo != null) {
+                                    Bundle arguments = new Bundle();
+                                    arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, "李宗盛");
+                                    textInfo.get(0).performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);
+
+                                    TimeUnit.SECONDS.sleep(3);
+                                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                        AccessibilityNodeInfo freshRoot = getRootInActiveWindow();
+                                        if (freshRoot != null) {
+                                            state = 0;
+                                            List<AccessibilityNodeInfo> list = findNodesByClassName(freshRoot, "android.widget.RelativeLayout");
+                                            if(list != null) {
+                                                Log.d(TAG, "ExistsNodeOrChildren " + list.size());
+                                                for (AccessibilityNodeInfo node : list){
+                                                    CharSequence text = node.getText();
+                                                    if (node.isClickable()) {
+                                                        Log.d(TAG, state+" 按钮文本: " + text);
+                                                        state+=1;
+                                                    }else{
+                                                        Log.d(TAG, state+" 不是按钮文本: " + text);
+                                                    }
+                                                }
+                                                //list.get(1).performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+                                                //list.get(1).performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                            }else {
+                                                throw new RuntimeException("未找到目标元素");
+                                            }
+                                        }
+                                    }, 500); // 延迟 500ms 等待界面刷新完成
+                                }else {
+                                    throw new RuntimeException("未找到目标元素");
+                                }
                             }else{
                                 Log.d(TAG,"Another Activity");
                             }
-                        } catch (PackageManager.NameNotFoundException e) {
-                            e.printStackTrace();
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
+                        }catch (Exception e){
+                            e.printStackTrace();
                         }
                     }
 

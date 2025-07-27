@@ -1,0 +1,19 @@
+
+                AccessibilityNodeInfo source = event.getSource();
+                if (source != null) {
+                    CharSequence packageName = source.getPackageName();
+                    if (event.getEventType() == event.TYPE_WINDOW_STATE_CHANGED) {
+                        //获取当前窗口activity名
+                        ComponentName componentName = new ComponentName(
+                                event.getPackageName().toString(),
+                                event.getClassName().toString()
+                        );
+                        //Log.e(TAG, event.getClassName().toString());
+                        try {
+                            if(state == 0 ){
+                                activityName = getPackageManager().getActivityInfo(componentName, 0).toString();
+                                activityName = activityName.substring(activityName.indexOf(" "), activityName.indexOf("}"));
+                                Log.e(TAG, "=======" + activityName);
+                            }else{
+                                activityName = "";
+                            }
