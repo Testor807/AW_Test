@@ -1,0 +1,24 @@
+if (activityName.equals(" com.google.android.apps.youtube.app.watchwhile.MainActivity")) {
+                                Log.e(TAG, "Arrived");
+                                //performYouTubeSearchClick(1104,84);
+                                state+=1;
+
+                                List<AccessibilityNodeInfo> searchBoxes = rootNode.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/menu_item_view");
+                                if (searchBoxes != null) {
+                                    Log.d(TAG, "ExistsNodeOrChildren " + searchBoxes.size());
+                                    /**
+                                    searchBoxes.get(1).performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+                                    searchBoxes.get(1).performAction(AccessibilityNodeInfo.ACTION_CLICK);
+
+                                    List<AccessibilityNodeInfo> textBox = nodes.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/search_edit_text");
+                                    if (textBox != null) {
+                                        textBox.get(0).performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+                                        Bundle arguments = new Bundle();
+                                        arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, "Appium");
+                                        textBox.get(0).performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);
+                                    }
+                                     **/
+
+                                } else {
+                                    Log.d(TAG, "The node being not found!");
+                                }

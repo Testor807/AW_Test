@@ -1,0 +1,76 @@
+MainPage Event:
+// 查找所有匹配类名的节点
+                                List<AccessibilityNodeInfo> nodes = findNodesByClassName(rootNode, "android.view.ViewGroup");
+                                state = 0;
+                                // 处理找到的节点
+                                for (AccessibilityNodeInfo node : nodes) {
+                                    // 执行操作，例如点击
+                                    if (node.isClickable()) {
+                                        state+=1;
+                                    }
+
+                                    /* 获取其他信息
+                                    *CharSequence text = node.getText();
+                                    *CharSequence contentDescription = node.getContentDescription();*/
+                                    Rect bounds = new Rect();
+                                    node.getBoundsInScreen(bounds);
+
+                                    // 计算中心点坐标
+                                    int centerX = bounds.centerX();
+                                    int centerY = bounds.centerY();
+
+                                    // 获取节点文本
+                                    /*CharSequence text = node.getText();
+
+                                    *Log.d(TAG, "按钮文本: " + text +
+                                    *       ", 位置: (" + bounds.left + "," + bounds.top + ")-(" +
+                                    *        bounds.right + "," + bounds.bottom + ")" +
+                                    *        ", 中心点: (" + centerX + "," + centerY + ")");
+                                    *Log.d(TAG, "Found clickable nodes: " +state);*/
+
+                                    // 记得回收节点
+                                    //node.recycle();
+                                }
+                                nodes.get(0).performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+                                nodes.get(0).performAction(AccessibilityNodeInfo.ACTION_CLICK);
+
+                                // 回收根节点
+                                rootNode.recycle();
+
+
+
+SearchPage Event:
+Log.d(TAG,"In SearchActivity");
+                                rootNode = getRootInActiveWindow();
+                                List<AccessibilityNodeInfo> textInfo = rootNode.findAccessibilityNodeInfosByViewId("cn.damai:id/header_search_v2_input");
+                                if (textInfo != null) {
+                                    Bundle arguments = new Bundle();
+                                    arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, "李宗盛");
+                                    textInfo.get(0).performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);
+
+                                    TimeUnit.SECONDS.sleep(3);
+                                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                        AccessibilityNodeInfo freshRoot = getRootInActiveWindow();
+                                        if (freshRoot != null) {
+                                            state = 0;
+                                            List<AccessibilityNodeInfo> list = findNodesByClassName(freshRoot, "android.widget.RelativeLayout");
+                                            if(list != null) {
+                                                Log.d(TAG, "ExistsNodeOrChildren " + list.size());
+                                                for (AccessibilityNodeInfo node : list){
+                                                    CharSequence text = node.getText();
+                                                    if (node.isClickable()) {
+                                                        Log.d(TAG, state+" 按钮文本: " + text);
+                                                        state+=1;
+                                                    }else{
+                                                        Log.d(TAG, state+" 不是按钮文本: " + text);
+                                                    }
+                                                }
+                                                list.get(2).performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+                                                list.get(2).performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                            }else {
+                                                throw new RuntimeException("未找到目标元素");
+                                            }
+                                        }
+                                    }, 500); // 延迟 500ms 等待界面刷新完成
+
+
