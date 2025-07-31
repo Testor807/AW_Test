@@ -32,13 +32,17 @@ public class MyAccessibilityService extends AccessibilityService {
                 break;
             case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
                 Log.d(TAG,"WINDOW_CONTENT_CHANGED");
-                CheckInfo(event);
+                reloadRootNode();
                 reload();
                 break;
             case AccessibilityEvent.TYPE_VIEW_SCROLLED:
                 // 处理同一 Activity 内的动态内容更新
                 break;
         }
+    }
+
+    private void reloadRootNode() {
+        rootNode = getRootInActiveWindow();
     }
 
     public void CheckInfo(AccessibilityEvent event){
