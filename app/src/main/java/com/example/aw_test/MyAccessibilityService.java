@@ -84,11 +84,10 @@ public class MyAccessibilityService extends AccessibilityService {
         if(activityName.equals("com.alibaba.pictures.bricks.search.v2.SearchActivity")) {
             nodes = findNodesByClassName(rootNode);
             if(cur != null) {
-                if(nodes == cur) {
+                if(nodes.equals(cur)) {
                     Log.d(TAG, "Current Nodes is same as the New Nodes!");
                 }else{
                     Log.d(TAG, "Current Nodes isn't same as the New Nodes!");
-
                     Log.d(TAG, "ExistsNodeOrChildren " + nodes.size());
 
                     int state = 0;
