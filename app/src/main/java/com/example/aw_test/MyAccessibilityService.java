@@ -2,9 +2,8 @@ package com.example.aw_test;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
-import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
 import android.graphics.Path;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
@@ -19,11 +18,15 @@ import java.util.Objects;
 public class MyAccessibilityService extends AccessibilityService {
 
     private static final String TAG = "MyAccessibilityService";
-    private static int state = 0;
     protected Youtube youtube;
     protected String activityName;
-    protected AccessibilityNodeInfo rootNode;
+    protected AccessibilityNodeInfo rootNode,curNode;
+    // 保存上一次的 rootNode 信息
+    private String lastRootNodeHash = "";
+    private List<AccessibilityNodeInfo> nodes;
+    private List<AccessibilityNodeInfo> cur = null;
 
+    @SuppressLint("SwitchIntDef")
     public void onAccessibilityEvent(AccessibilityEvent event) {
         switch (event.getEventType()) {
             case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
@@ -49,18 +52,19 @@ public class MyAccessibilityService extends AccessibilityService {
         AccessibilityNodeInfo source = event.getSource();
         if (source != null) {
             CharSequence packageName = source.getPackageName();
-            if (event.getEventType() == event.TYPE_WINDOW_STATE_CHANGED) {
+            if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                 //获取当前窗口activity名
                 ComponentName componentName = new ComponentName(
                         event.getPackageName().toString(),
-                        event.getClassName().toString()
+                        Objects.requireNonNull(event.getClassName()).toString()
                 );
                 //Log.e(TAG, event.getClassName().toString());
                 try {
                     // 直接从event获取Activity名称
                     activityName = Objects.requireNonNull(event.getClassName()).toString();
-
                     Log.d(TAG, "Current Activity: " + activityName);
+
+                    rootNode = getRootInActiveWindow();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -78,17 +82,33 @@ public class MyAccessibilityService extends AccessibilityService {
     public void reload(){
         Log.d(TAG,"Running!");
         if(activityName.equals("com.alibaba.pictures.bricks.search.v2.SearchActivity")) {
-            List<AccessibilityNodeInfo> nodes = findNodesByClassName(rootNode, "android.widget.TextView");
-            if (nodes != null) {
+            nodes = findNodesByClassName(rootNode);
+            if(cur != null) {
+                if(nodes == cur) {
+                    Log.d(TAG, "Current Nodes is same as the New Nodes!");
+                }else{
+                    Log.d(TAG, "Current Nodes isn't same as the New Nodes!");
+
+                    Log.d(TAG, "ExistsNodeOrChildren " + nodes.size());
+
+                    int state = 0;
+                    for (AccessibilityNodeInfo node : nodes) {
+                        CharSequence text2 = node.getText();
+                        Log.d(TAG, "No." + state + " Node文本: " + text2);
+                        state++;
+                    }
+                }
+            }else {
+                Log.d(TAG,"Current Nodes is null");
+                cur = nodes;
                 Log.d(TAG, "ExistsNodeOrChildren " + nodes.size());
-                state = 0;
+
+                int state = 0;
                 for (AccessibilityNodeInfo node : nodes) {
-                    CharSequence text = node.getText();
-                    Log.d(TAG, "No." + state + " Node文本: " + text);
+                    CharSequence text2 = node.getText();
+                    Log.d(TAG, "No." + state + " Node文本: " + text2);
                     state++;
                 }
-            } else {
-                throw new RuntimeException("未找到目标元素");
             }
         }
     }
@@ -121,14 +141,14 @@ public class MyAccessibilityService extends AccessibilityService {
 
 
     /**
-    * 通过类名查找所有匹配的节点
+     * 通过类名查找所有匹配的节点
      * * @param root 根节点
-     * @param className 要查找的类名
+     *
      * @return 匹配的节点列表
      */
-    private List<AccessibilityNodeInfo> findNodesByClassName(AccessibilityNodeInfo root, String className) {
+    private List<AccessibilityNodeInfo> findNodesByClassName(AccessibilityNodeInfo root) {
         List<AccessibilityNodeInfo> result = new ArrayList<>();
-        findNodesByClassNameRecursive(root, className, result);
+        findNodesByClassNameRecursive(root, "android.widget.TextView", result);
         return result;
     }
 
@@ -141,7 +161,7 @@ public class MyAccessibilityService extends AccessibilityService {
         }
 
         // 检查当前节点是否匹配
-        if (className.equals(node.getClassName())) {
+        if (className.contentEquals(node.getClassName())) {
             // 创建节点副本添加到结果中（因为原始节点会在遍历后被回收）
             AccessibilityNodeInfo copy = AccessibilityNodeInfo.obtain(node);
             result.add(copy);
