@@ -19,12 +19,12 @@ public class MyAccessibilityService extends AccessibilityService {
 
     private static final String TAG = "MyAccessibilityService";
     protected Youtube youtube;
-    protected String activityName;
+    protected String activityName = "";
     protected AccessibilityNodeInfo rootNode,curNode;
     // 保存上一次的 rootNode 信息
-    private String lastRootNodeHash = "";
-    private List<AccessibilityNodeInfo> nodes;
+    private List<AccessibilityNodeInfo> nodes, itemTexts;
     private List<AccessibilityNodeInfo> cur = null;
+    private CharSequence text2 = null;
 
     @SuppressLint("SwitchIntDef")
     public void onAccessibilityEvent(AccessibilityEvent event) {
@@ -81,27 +81,47 @@ public class MyAccessibilityService extends AccessibilityService {
 
     public void reload(){
         Log.d(TAG,"Running!");
-        if(activityName.equals("com.alibaba.pictures.bricks.search.v2.SearchActivity")) {
-            nodes = findNodesByClassName(rootNode);
+        if(activityName.equals("com.alibaba.pictures.bricks.search.v2.SearchActivity")){
+            nodes = findNodesByClassName(rootNode,"android.widget.TextView");
             if(cur != null) {
                 if(nodes.equals(cur)) {
                     Log.d(TAG, "Current Nodes is same as the New Nodes!");
                 }else{
                     Log.d(TAG, "Current Nodes isn't same as the New Nodes!");
-                    Log.d(TAG, "ExistsNodeOrChildren " + nodes.size());
 
+                    cur = nodes;
+                    Log.d(TAG, "ExistsNodeOrChildren " + nodes.size());
+                    int num = 0;
                     int state = 0;
                     for (AccessibilityNodeInfo node : nodes) {
-                        CharSequence text2 = node.getText();
-                        Log.d(TAG, "No." + state + " Node文本: " + text2);
+                        text2 = node.getText();
+                        if (Objects.equals(text2, "临沂")){
+                            Log.d(TAG, "No." + state + " Node文本是临沂");
+                            break;
+                        }else{
+                            Log.d(TAG, "No." + state + " Node文本: " + text2);
+                        }
                         state++;
                     }
+                    //performYouTubeSearchClick(179,609);
+                    /*
+                    for (AccessibilityNodeInfo linearLayout : nodes) {
+                        Log.d(TAG,"Linerlayout "+num+":");
+                        itemTexts = findNodesByClassName(linearLayout,"android.widget.TextView");
+                        int state = 0;
+                        for (AccessibilityNodeInfo node : itemTexts) {
+                            CharSequence text2 = node.getText();
+                            Log.d(TAG, "No." + state + " Node文本: " + text2);
+                            state++;
+                        }
+                        num++;
+                    }*/
                 }
             }else {
                 Log.d(TAG,"Current Nodes is null");
                 cur = nodes;
                 Log.d(TAG, "ExistsNodeOrChildren " + nodes.size());
-
+                int num = 0;
                 int state = 0;
                 for (AccessibilityNodeInfo node : nodes) {
                     CharSequence text2 = node.getText();
@@ -112,6 +132,7 @@ public class MyAccessibilityService extends AccessibilityService {
         }
     }
     private void performYouTubeSearchClick(float x, float y) {
+        Log.d(TAG,"Ready Click");
         Path clickPath = new Path();
         clickPath.moveTo(x, y);
 
@@ -145,9 +166,9 @@ public class MyAccessibilityService extends AccessibilityService {
      *
      * @return 匹配的节点列表
      */
-    private List<AccessibilityNodeInfo> findNodesByClassName(AccessibilityNodeInfo root) {
+    private List<AccessibilityNodeInfo> findNodesByClassName(AccessibilityNodeInfo root,String className) {
         List<AccessibilityNodeInfo> result = new ArrayList<>();
-        findNodesByClassNameRecursive(root, "android.widget.TextView", result);
+        findNodesByClassNameRecursive(root,className, result);
         return result;
     }
 
