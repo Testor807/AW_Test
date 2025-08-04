@@ -5,6 +5,7 @@ import android.accessibilityservice.GestureDescription;
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.graphics.Path;
+import android.graphics.Rect;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -14,6 +15,7 @@ import com.example.aw_test.Package.Youtube;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public class MyAccessibilityService extends AccessibilityService {
 
@@ -36,13 +38,70 @@ public class MyAccessibilityService extends AccessibilityService {
             case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
                 Log.d(TAG,"WINDOW_CONTENT_CHANGED");
                 reloadRootNode();
-                reload();
+                action();
+                //reload();
                 break;
             case AccessibilityEvent.TYPE_VIEW_SCROLLED:
                 // 处理同一 Activity 内的动态内容更新
                 break;
         }
     }
+    private void action() {
+        if(activityName.equals("cn.damai.trade.newtradeorder.ui.projectdetail.ui.activity.ProjectDetailActivity")){
+            if (rootNode != null) {
+                Log.d(TAG,"Checking");
+                try{
+                    TimeUnit.SECONDS.sleep(3);
+                    List<AccessibilityNodeInfo> clickableNodes = findClickableNodes(rootNode);
+                    for (AccessibilityNodeInfo node : clickableNodes) {
+                        // 获取边界值
+                        Rect bounds = new Rect();
+                        node.getBoundsInScreen(bounds);
+
+                        String resourceId = node.getViewIdResourceName() != null ?
+                                node.getViewIdResourceName() : "null";
+                        String className = node.getClassName() != null ?
+                                node.getClassName().toString() : "null";
+
+                        Log.d(TAG, "Clickable element - " +
+                                "ResourceId: " + resourceId +
+                                ", ClassName: " + className+", Position: [" + bounds.left + ", " + bounds.top +
+                                "], Size: " + bounds.width() + "x" + bounds.height());
+                    }
+                    rootNode.recycle();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }else{
+                Log.d(TAG,"rootnode null!");
+            }
+        }
+    }
+
+    private List<AccessibilityNodeInfo> findClickableNodes(AccessibilityNodeInfo node) {
+        List<AccessibilityNodeInfo> result = new ArrayList<>();
+        if (node == null) {
+            return result;
+        }
+
+        // 检查当前节点是否可点击
+        if (node.isClickable()) {
+            result.add(node);
+            // 注意：这里不返回，因为可能有子节点也是可点击的
+        }
+
+        // 递归检查子节点
+        for (int i = 0; i < node.getChildCount(); i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                result.addAll(findClickableNodes(child));
+                child.recycle(); // 回收子节点
+            }
+        }
+
+        return result;
+    }
+
 
     private void reloadRootNode() {
         rootNode = getRootInActiveWindow();
@@ -103,19 +162,6 @@ public class MyAccessibilityService extends AccessibilityService {
                         }
                         state++;
                     }
-                    //performYouTubeSearchClick(179,609);
-                    /*
-                    for (AccessibilityNodeInfo linearLayout : nodes) {
-                        Log.d(TAG,"Linerlayout "+num+":");
-                        itemTexts = findNodesByClassName(linearLayout,"android.widget.TextView");
-                        int state = 0;
-                        for (AccessibilityNodeInfo node : itemTexts) {
-                            CharSequence text2 = node.getText();
-                            Log.d(TAG, "No." + state + " Node文本: " + text2);
-                            state++;
-                        }
-                        num++;
-                    }*/
                 }
             }else {
                 Log.d(TAG,"Current Nodes is null");
