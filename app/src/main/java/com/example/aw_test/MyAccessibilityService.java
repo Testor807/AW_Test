@@ -51,24 +51,40 @@ public class MyAccessibilityService extends AccessibilityService {
             if (rootNode != null) {
                 Log.d(TAG,"Checking");
                 try{
-                    TimeUnit.SECONDS.sleep(3);
-                    List<AccessibilityNodeInfo> clickableNodes = findClickableNodes(rootNode);
-                    for (AccessibilityNodeInfo node : clickableNodes) {
-                        // 获取边界值
-                        Rect bounds = new Rect();
-                        node.getBoundsInScreen(bounds);
-
-                        String resourceId = node.getViewIdResourceName() != null ?
-                                node.getViewIdResourceName() : "null";
-                        String className = node.getClassName() != null ?
-                                node.getClassName().toString() : "null";
-
-                        Log.d(TAG, "Clickable element - " +
-                                "ResourceId: " + resourceId +
-                                ", ClassName: " + className+", Position: [" + bounds.left + ", " + bounds.top +
-                                "], Size: " + bounds.width() + "x" + bounds.height());
+                    nodes = rootNode.findAccessibilityNodeInfosByText("立即预订");
+                    if(nodes != null){
+                        for (AccessibilityNodeInfo node: nodes){
+                            if(node.isClickable()){
+                                Log.d(TAG,"Node is clickable!");
+                            }else{
+                                Log.d(TAG,"Node isn't clickable!");
+                            }
+                        }
+                    }else{
+                        Log.d(TAG, "node null!");
                     }
-                    rootNode.recycle();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }else{
+                Log.d(TAG,"rootnode null!");
+            }
+        }else if(activityName.equals("cn.damai.commonbusiness.seatbiz.sku.qilin.ui.NcovSkuActivity")){
+            if (rootNode != null) {
+                Log.d(TAG,"Finding");
+                try{
+                    nodes = rootNode.findAccessibilityNodeInfosByText("缺货登记");
+                    if(nodes != null){
+                        for (AccessibilityNodeInfo node: nodes){
+                            if(node.isClickable()){
+                                Log.d(TAG,"Node is clickable!");
+                            }else{
+                                Log.d(TAG,"Node isn't clickable!");
+                            }
+                        }
+                    }else{
+                        Log.d(TAG, "node null!");
+                    }
                 }catch (Exception e){
                     e.printStackTrace();
                 }
