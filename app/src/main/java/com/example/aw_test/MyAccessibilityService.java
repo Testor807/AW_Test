@@ -12,6 +12,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.example.aw_test.Package.Youtube;
 
+import com.example.aw_test.NodeBoundsUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -52,23 +53,17 @@ public class MyAccessibilityService extends AccessibilityService {
                 Log.d(TAG,"Checking");
                 try{
                     TimeUnit.SECONDS.sleep(3);
-                    List<AccessibilityNodeInfo> clickableNodes = findClickableNodes(rootNode);
-                    for (AccessibilityNodeInfo node : clickableNodes) {
-                        // 获取边界值
-                        Rect bounds = new Rect();
-                        node.getBoundsInScreen(bounds);
-
-                        String resourceId = node.getViewIdResourceName() != null ?
-                                node.getViewIdResourceName() : "null";
-                        String className = node.getClassName() != null ?
-                                node.getClassName().toString() : "null";
-
-                        Log.d(TAG, "Clickable element - " +
-                                "ResourceId: " + resourceId +
-                                ", ClassName: " + className+", Position: [" + bounds.left + ", " + bounds.top +
-                                "], Size: " + bounds.width() + "x" + bounds.height());
+                    List<AccessibilityNodeInfo> nodes = rootNode.findAccessibilityNodeInfosByText("立即预订");
+                    if(nodes != null){
+                        Log.d(TAG,"Exist!");
+                        Rect bounds = NodeBoundsUtils.getNodeBounds(nodes.get(0));
+                        // 获取中心点
+                        int[] center = NodeBoundsUtils.getNodeCenter(nodes.get(0));
+                        Log.d("NodeCenter", String.format("Center: x=%d, y=%d", center[0], center[1]));
+                        performYouTubeSearchClick(center[0], center[1]);
+                    }else{
+                        Log.d(TAG,"Not Exist!");
                     }
-                    rootNode.recycle();
                 }catch (Exception e){
                     e.printStackTrace();
                 }
