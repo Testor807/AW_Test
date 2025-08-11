@@ -52,22 +52,33 @@ public class MyAccessibilityService extends AccessibilityService {
                 Log.d(TAG,"Checking");
                 try{
                     TimeUnit.SECONDS.sleep(3);
+                    int num=0;
+                    //List<AccessibilityNodeInfo> clickableNodes = rootNode.findAccessibilityNodeInfosByText("立即预订");
                     List<AccessibilityNodeInfo> clickableNodes = findClickableNodes(rootNode);
+                    clickableNodes.get(16).performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+                    clickableNodes.get(16).performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                    /*
                     for (AccessibilityNodeInfo node : clickableNodes) {
                         // 获取边界值
-                        Rect bounds = new Rect();
-                        node.getBoundsInScreen(bounds);
+                        Rect bounds = NodeBoundsUtils.getNodeBounds(node);
 
-                        String resourceId = node.getViewIdResourceName() != null ?
-                                node.getViewIdResourceName() : "null";
-                        String className = node.getClassName() != null ?
-                                node.getClassName().toString() : "null";
+                        // 输出边界信息
+                        Log.d(TAG, String.format(
+                                num+" Button [%s] bounds: left=%d, top=%d, right=%d, bottom=%d, width=%d, height=%d",
+                                node.getText(),
+                                bounds.left,
+                                bounds.top,
+                                bounds.right,
+                                bounds.bottom,
+                                bounds.width(),
+                                bounds.height()
+                        ));
+                        num++;
 
-                        Log.d(TAG, "Clickable element - " +
-                                "ResourceId: " + resourceId +
-                                ", ClassName: " + className+", Position: [" + bounds.left + ", " + bounds.top +
-                                "], Size: " + bounds.width() + "x" + bounds.height());
-                    }
+                        // 获取中心点
+                        int[] center = NodeBoundsUtils.getNodeCenter(node);
+                        Log.d(TAG, String.format("Center: x=%d, y=%d", center[0], center[1]));
+                    }*/
                     rootNode.recycle();
                 }catch (Exception e){
                     e.printStackTrace();
