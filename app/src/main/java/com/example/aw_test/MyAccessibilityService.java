@@ -9,6 +9,7 @@ import android.graphics.Rect;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityWindowInfo;
 
 import com.example.aw_test.Package.Youtube;
 
@@ -52,11 +53,18 @@ public class MyAccessibilityService extends AccessibilityService {
                 Log.d(TAG,"Checking");
                 try{
                     TimeUnit.SECONDS.sleep(3);
-                    int num=0;
-                    //List<AccessibilityNodeInfo> clickableNodes = rootNode.findAccessibilityNodeInfosByText("立即预订");
-                    List<AccessibilityNodeInfo> clickableNodes = findClickableNodes(rootNode);
-                    clickableNodes.get(16).performAction(AccessibilityNodeInfo.ACTION_FOCUS);
-                    clickableNodes.get(16).performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                    performYouTubeSearchClick(730,1986);
+                    /* 假设要检查的坐标 (x, y)
+                    AccessibilityNodeInfo node = findNodeAt(rootNode, 315,1920 );
+                    if (node != null && node.isEnabled() && ( node.isLongClickable() || node.isFocusable())) {
+                        // 该位置可点击
+                        Log.d(TAG,"The node is clickable!");
+                        //performYouTubeSearchClick(315,1920);
+                        //performClickAtPosition2(318,1925);
+                    }else{
+                        Log.d(TAG,"The node isn't clickable!");
+                    }*/
+
                     /*
                     for (AccessibilityNodeInfo node : clickableNodes) {
                         // 获取边界值
@@ -87,6 +95,41 @@ public class MyAccessibilityService extends AccessibilityService {
                 Log.d(TAG,"rootnode null!");
             }
         }
+    }
+
+    private void performClickAtPosition2(int x, int y) {
+        GestureDescription.Builder builder = new GestureDescription.Builder();
+        Path path = new Path();
+        path.moveTo(x, y);
+
+        // 100ms的点击手势
+        builder.addStroke(new GestureDescription.StrokeDescription(
+                path, 0, 10));
+
+        dispatchGesture(builder.build(), null, null);
+        Log.d(TAG,"The node is clicked");
+    }
+
+    // 递归查找指定坐标的节点
+    private AccessibilityNodeInfo findNodeAt(AccessibilityNodeInfo root, int x, int y) {
+        if (root == null) return null;
+
+        Rect bounds = new Rect();
+        root.getBoundsInScreen(bounds);
+
+        if (!bounds.contains(x, y)) {
+            return null;
+        }
+
+        for (int i = 0; i < root.getChildCount(); i++) {
+            AccessibilityNodeInfo child = root.getChild(i);
+            AccessibilityNodeInfo found = findNodeAt(child, x, y);
+            if (found != null) {
+                return found;
+            }
+        }
+
+        return root;
     }
 
     private List<AccessibilityNodeInfo> findClickableNodes(AccessibilityNodeInfo node) {
