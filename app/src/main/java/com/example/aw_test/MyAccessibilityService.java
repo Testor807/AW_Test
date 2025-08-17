@@ -4,9 +4,17 @@ import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
+import android.graphics.Color;
 import android.graphics.Path;
+import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
+import android.os.Handler;
 import android.util.Log;
+import android.view.View;
+import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -16,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+
 
 public class MyAccessibilityService extends AccessibilityService {
 
@@ -27,6 +36,16 @@ public class MyAccessibilityService extends AccessibilityService {
     private List<AccessibilityNodeInfo> nodes, itemTexts;
     private List<AccessibilityNodeInfo> cur = null;
     private CharSequence text2 = null;
+    private WindowManager mWindowManager;
+    private View mMarkerView;
+    private Handler mHandler;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        mHandler = new Handler(getMainLooper());
+    }
 
     @SuppressLint("SwitchIntDef")
     public void onAccessibilityEvent(AccessibilityEvent event) {
@@ -34,47 +53,143 @@ public class MyAccessibilityService extends AccessibilityService {
             case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
                 Log.d(TAG,"WINDOW_STATE_CHANGED");
                 CheckInfo(event);
-                break;
-            case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
-                Log.d(TAG,"WINDOW_CONTENT_CHANGED");
-                reloadRootNode();
+                //Youtub();
                 action();
-                //reload();
                 break;
             case AccessibilityEvent.TYPE_VIEW_SCROLLED:
                 // 处理同一 Activity 内的动态内容更新
                 break;
         }
     }
+
+    public void Youtub()  {
+        if(activityName.equals("com.google.android.apps.youtube.app.watchwhile.MainActivity")){
+            Log.d(TAG,"Youtube App");
+            try{
+                TimeUnit.SECONDS.sleep(3);
+                Log.d(TAG, "Try to set dispatchGesture");
+                //performYouTubeSearchClick(1104,84);
+                // 2. 创建手势描述对象 (解决错误的关键)
+                GestureDescription.Builder builder = new GestureDescription.Builder();
+                Path path = new Path();
+                path.moveTo(1006,136);
+
+                // 创建 StrokeDescription (点击动作)
+                GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(
+                        path,
+                        0,   // 开始时间 (立即执行)
+                        50   // 持续时间 (毫秒)
+                );
+
+                // 3. 构建手势对象 (注意变量名声明)
+                builder.addStroke(stroke);
+                GestureDescription gesture = builder.build(); // 正确定义变量
+
+                // 4. 执行手势
+                dispatchGesture(gesture, new GestureResultCallback() {
+                            @Override
+                            public void onCompleted(GestureDescription gestureDescription) {
+                                Log.d(TAG, "GestureDescription successfully");
+                                // 进一步检查目标按钮的状态变化或页面跳转
+                            }
+
+                            @Override
+                            public void onCancelled(GestureDescription gestureDescription) {
+                                Log.e(TAG, "GestureDescription Fail");
+                            }
+                        },
+                        null
+                );
+
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
     private void action() {
         if(activityName.equals("cn.damai.trade.newtradeorder.ui.projectdetail.ui.activity.ProjectDetailActivity")){
             if (rootNode != null) {
-                Log.d(TAG,"Checking");
                 try{
-                    TimeUnit.SECONDS.sleep(3);
-                    List<AccessibilityNodeInfo> clickableNodes = findClickableNodes(rootNode);
-                    for (AccessibilityNodeInfo node : clickableNodes) {
-                        // 获取边界值
-                        Rect bounds = new Rect();
-                        node.getBoundsInScreen(bounds);
+                    TimeUnit.SECONDS.sleep(2);
+                    GestureDescription.Builder builder = new GestureDescription.Builder();
+                    Path path = new Path();
+                    path.moveTo(723,1996);
 
-                        String resourceId = node.getViewIdResourceName() != null ?
-                                node.getViewIdResourceName() : "null";
-                        String className = node.getClassName() != null ?
-                                node.getClassName().toString() : "null";
+                    // 创建 StrokeDescription (点击动作)
+                    GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(
+                            path,
+                            0,   // 开始时间 (立即执行)
+                            50   // 持续时间 (毫秒)
+                    );
 
-                        Log.d(TAG, "Clickable element - " +
-                                "ResourceId: " + resourceId +
-                                ", ClassName: " + className+", Position: [" + bounds.left + ", " + bounds.top +
-                                "], Size: " + bounds.width() + "x" + bounds.height());
-                    }
-                    rootNode.recycle();
-                }catch (Exception e){
+                    // 3. 构建手势对象 (注意变量名声明)
+                    builder.addStroke(stroke);
+                    GestureDescription gesture = builder.build(); // 正确定义变量
+
+                    // 4. 执行手势
+                    dispatchGesture(gesture, new GestureResultCallback() {
+                                @Override
+                                public void onCompleted(GestureDescription gestureDescription) {
+                                    Log.d(TAG, "GestureDescription successfully");
+                                    showClickMarker(723,1996);
+                                    // 进一步检查目标按钮的状态变化或页面跳转
+                                }
+
+                                @Override
+                                public void onCancelled(GestureDescription gestureDescription) {
+                                    Log.e(TAG, "GestureDescription Fail");
+                                }
+                            },
+                            null
+                    );
+
+                }catch(Exception e){
                     e.printStackTrace();
                 }
             }else{
                 Log.d(TAG,"rootnode null!");
             }
+        }
+    }
+
+    private void showClickMarker(int x, int y) {
+        // 移除旧标记
+        removeMarker();
+
+        View marker = new View(this);
+        marker.setBackgroundColor(Color.RED); // 红色标记点
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                10, // 宽度（像素）
+                10, // 高度（像素）
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ?
+                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY :
+                        WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                PixelFormat.TRANSLUCENT
+        );
+        //params.x = x - 10; // 居中显示
+        //params.y = y - 10;
+        // 添加覆盖层
+        mWindowManager.addView(mMarkerView, params);
+
+        // 3秒后移除标记
+        mHandler.postDelayed(this::removeMarker, 3000);
+    }
+
+    private Drawable createMarkerDrawable() {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setShape(GradientDrawable.OVAL);
+        drawable.setColor(Color.RED);
+        drawable.setAlpha(180); // 半透明
+        drawable.setSize(5, 5);
+        drawable.setStroke(5, Color.WHITE);
+        return drawable;
+    }
+
+    private void removeMarker() {
+        if (mMarkerView != null) {
+            mWindowManager.removeView(mMarkerView);
+            mMarkerView = null;
         }
     }
 
@@ -112,13 +227,13 @@ public class MyAccessibilityService extends AccessibilityService {
         if (source != null) {
             CharSequence packageName = source.getPackageName();
             if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-                //获取当前窗口activity名
-                ComponentName componentName = new ComponentName(
-                        event.getPackageName().toString(),
-                        Objects.requireNonNull(event.getClassName()).toString()
-                );
-                //Log.e(TAG, event.getClassName().toString());
                 try {
+                    //获取当前窗口activity名
+                    ComponentName componentName = new ComponentName(
+                            event.getPackageName().toString(),
+                            Objects.requireNonNull(event.getClassName()).toString()
+                    );
+                    //Log.e(TAG, event.getClassName().toString());
                     // 直接从event获取Activity名称
                     activityName = Objects.requireNonNull(event.getClassName()).toString();
                     Log.d(TAG, "Current Activity: " + activityName);
@@ -190,13 +305,13 @@ public class MyAccessibilityService extends AccessibilityService {
             @Override
             public void onCompleted(GestureDescription gestureDescription) {
                 super.onCompleted(gestureDescription);
-                Log.i(TAG, "Handle Successful");
+                Log.d(TAG, "Handle Successful");
             }
 
             @Override
             public void onCancelled(GestureDescription gestureDescription) {
                 super.onCancelled(gestureDescription);
-                Log.e(TAG, "Handle Cancel");
+                Log.d(TAG, "Handle Cancel");
             }
         }, null);
 

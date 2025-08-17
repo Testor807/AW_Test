@@ -1,0 +1,16 @@
+List<AccessibilityNodeInfo> clickableNodes = findClickableNodes(rootNode);
+                    for (AccessibilityNodeInfo node : clickableNodes) {
+                        Rect bounds = new Rect();
+                        node.getBoundsInScreen(bounds);
+
+                        String resourceId = node.getViewIdResourceName() != null ?
+                                node.getViewIdResourceName() : "null";
+                        String className = node.getClassName() != null ?
+                                node.getClassName().toString() : "null";
+
+                        Log.d(TAG, "Clickable element - " +
+                                "ResourceId: " + resourceId +
+                                ", ClassName: " + className+", Position: [" + bounds.left + ", " + bounds.top +
+                                "], Size: " + bounds.width() + "x" + bounds.height());
+                    }
+                    rootNode.recycle();
