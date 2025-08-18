@@ -9,7 +9,6 @@ import android.graphics.Rect;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.view.accessibility.AccessibilityWindowInfo;
 
 import com.example.aw_test.Package.Youtube;
 
@@ -28,32 +27,30 @@ public class MyAccessibilityService extends AccessibilityService {
     private List<AccessibilityNodeInfo> nodes, itemTexts;
     private List<AccessibilityNodeInfo> cur = null;
     private CharSequence text2 = null;
+    private CircleOverlay circleOverlay;
 
     @SuppressLint("SwitchIntDef")
     public void onAccessibilityEvent(AccessibilityEvent event) {
+        circleOverlay = new CircleOverlay(this);
         switch (event.getEventType()) {
             case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
                 Log.d(TAG,"WINDOW_STATE_CHANGED");
                 CheckInfo(event);
-                break;
-            case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
-                Log.d(TAG,"WINDOW_CONTENT_CHANGED");
-                reloadRootNode();
-                action();
-                //reload();
+                action(event);
                 break;
             case AccessibilityEvent.TYPE_VIEW_SCROLLED:
                 // 处理同一 Activity 内的动态内容更新
                 break;
         }
     }
-    private void action() {
+    private void action(AccessibilityEvent event) {
         if(activityName.equals("cn.damai.trade.newtradeorder.ui.projectdetail.ui.activity.ProjectDetailActivity")){
             if (rootNode != null) {
                 Log.d(TAG,"Checking");
                 try{
                     TimeUnit.SECONDS.sleep(3);
-                    performYouTubeSearchClick(730,1986);
+                    performYouTubeSearchClick(730,1946);
+
                     /* 假设要检查的坐标 (x, y)
                     AccessibilityNodeInfo node = findNodeAt(rootNode, 315,1920 );
                     if (node != null && node.isEnabled() && ( node.isLongClickable() || node.isFocusable())) {
@@ -189,7 +186,7 @@ public class MyAccessibilityService extends AccessibilityService {
 
     @Override
     public void onInterrupt (){
-
+        circleOverlay.hideCircle();
     }
 
     public void reload(){
@@ -232,19 +229,20 @@ public class MyAccessibilityService extends AccessibilityService {
         }
     }
     private void performYouTubeSearchClick(float x, float y) {
-        Log.d(TAG,"Ready Click");
         Path clickPath = new Path();
         clickPath.moveTo(x, y);
 
         GestureDescription.Builder builder = new GestureDescription.Builder();
         builder.addStroke(new GestureDescription.StrokeDescription(
-                clickPath, 0, 5)); // 100ms點擊持續時間
+                clickPath, 0, 100)); // 100ms點擊持續時間
 
         boolean dispatched = dispatchGesture(builder.build(), new GestureResultCallback() {
             @Override
             public void onCompleted(GestureDescription gestureDescription) {
                 super.onCompleted(gestureDescription);
                 Log.i(TAG, "Handle Successful");
+                circleOverlay.hideCircle(); // 先移除之前的圆形
+                circleOverlay.showCircle(730, 1946); // 在新位置绘制圆形
             }
 
             @Override
