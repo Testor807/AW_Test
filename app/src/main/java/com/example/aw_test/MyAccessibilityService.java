@@ -12,6 +12,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.example.aw_test.Package.Youtube;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -36,21 +37,32 @@ public class MyAccessibilityService extends AccessibilityService {
             case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
                 Log.d(TAG,"WINDOW_STATE_CHANGED");
                 CheckInfo(event);
-                action(event);
+                //reload();
+                action();
                 break;
             case AccessibilityEvent.TYPE_VIEW_SCROLLED:
                 // 处理同一 Activity 内的动态内容更新
                 break;
         }
     }
-    private void action(AccessibilityEvent event) {
+    private void action(){
         if(activityName.equals("cn.damai.trade.newtradeorder.ui.projectdetail.ui.activity.ProjectDetailActivity")){
             if (rootNode != null) {
-                Log.d(TAG,"Checking");
+                // 查找所有FrameLayout
                 try{
                     TimeUnit.SECONDS.sleep(3);
-                    performYouTubeSearchClick(730,1946);
+                    List<AccessibilityNodeInfo> text = rootNode.findAccessibilityNodeInfosByViewId("cn.damai:id/project_detail_perform_time_tv");
+                    if(text != null){
+                        Log.d(TAG,"Text　Node :"+text.size());
+                        nodes = findNodesByClassName(rootNode,"android.widget.LinearLayout");
+                        Log.d(TAG,"Frame Size:"+nodes.size());
+                    }else{
+                        Log.d(TAG,"Target Node Null");
+                    }
 
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
                     /* 假设要检查的坐标 (x, y)
                     AccessibilityNodeInfo node = findNodeAt(rootNode, 315,1920 );
                     if (node != null && node.isEnabled() && ( node.isLongClickable() || node.isFocusable())) {
@@ -84,10 +96,7 @@ public class MyAccessibilityService extends AccessibilityService {
                         int[] center = NodeBoundsUtils.getNodeCenter(node);
                         Log.d(TAG, String.format("Center: x=%d, y=%d", center[0], center[1]));
                     }*/
-                    rootNode.recycle();
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
+                rootNode.recycle();
             }else{
                 Log.d(TAG,"rootnode null!");
             }
