@@ -27,47 +27,63 @@ public class MyAccessibilityService extends AccessibilityService {
     private List<AccessibilityNodeInfo> nodes, itemTexts;
     private List<AccessibilityNodeInfo> cur = null;
     private CharSequence text2 = null;
+    private CircleOverlay circleOverlay;
 
     @SuppressLint("SwitchIntDef")
     public void onAccessibilityEvent(AccessibilityEvent event) {
+        circleOverlay = new CircleOverlay(this);
         switch (event.getEventType()) {
             case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
                 Log.d(TAG,"WINDOW_STATE_CHANGED");
                 CheckInfo(event);
-                break;
-            case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
-                Log.d(TAG,"WINDOW_CONTENT_CHANGED");
-                reloadRootNode();
-                action();
-                //reload();
+                action(event);
                 break;
             case AccessibilityEvent.TYPE_VIEW_SCROLLED:
                 // 处理同一 Activity 内的动态内容更新
                 break;
         }
     }
-    private void action() {
+    private void action(AccessibilityEvent event) {
         if(activityName.equals("cn.damai.trade.newtradeorder.ui.projectdetail.ui.activity.ProjectDetailActivity")){
             if (rootNode != null) {
                 Log.d(TAG,"Checking");
                 try{
                     TimeUnit.SECONDS.sleep(3);
-                    List<AccessibilityNodeInfo> clickableNodes = findClickableNodes(rootNode);
+                    performYouTubeSearchClick(730,1946);
+
+                    /* 假设要检查的坐标 (x, y)
+                    AccessibilityNodeInfo node = findNodeAt(rootNode, 315,1920 );
+                    if (node != null && node.isEnabled() && ( node.isLongClickable() || node.isFocusable())) {
+                        // 该位置可点击
+                        Log.d(TAG,"The node is clickable!");
+                        //performYouTubeSearchClick(315,1920);
+                        //performClickAtPosition2(318,1925);
+                    }else{
+                        Log.d(TAG,"The node isn't clickable!");
+                    }*/
+
+                    /*
                     for (AccessibilityNodeInfo node : clickableNodes) {
                         // 获取边界值
-                        Rect bounds = new Rect();
-                        node.getBoundsInScreen(bounds);
+                        Rect bounds = NodeBoundsUtils.getNodeBounds(node);
 
-                        String resourceId = node.getViewIdResourceName() != null ?
-                                node.getViewIdResourceName() : "null";
-                        String className = node.getClassName() != null ?
-                                node.getClassName().toString() : "null";
+                        // 输出边界信息
+                        Log.d(TAG, String.format(
+                                num+" Button [%s] bounds: left=%d, top=%d, right=%d, bottom=%d, width=%d, height=%d",
+                                node.getText(),
+                                bounds.left,
+                                bounds.top,
+                                bounds.right,
+                                bounds.bottom,
+                                bounds.width(),
+                                bounds.height()
+                        ));
+                        num++;
 
-                        Log.d(TAG, "Clickable element - " +
-                                "ResourceId: " + resourceId +
-                                ", ClassName: " + className+", Position: [" + bounds.left + ", " + bounds.top +
-                                "], Size: " + bounds.width() + "x" + bounds.height());
-                    }
+                        // 获取中心点
+                        int[] center = NodeBoundsUtils.getNodeCenter(node);
+                        Log.d(TAG, String.format("Center: x=%d, y=%d", center[0], center[1]));
+                    }*/
                     rootNode.recycle();
                 }catch (Exception e){
                     e.printStackTrace();
@@ -76,6 +92,41 @@ public class MyAccessibilityService extends AccessibilityService {
                 Log.d(TAG,"rootnode null!");
             }
         }
+    }
+
+    private void performClickAtPosition2(int x, int y) {
+        GestureDescription.Builder builder = new GestureDescription.Builder();
+        Path path = new Path();
+        path.moveTo(x, y);
+
+        // 100ms的点击手势
+        builder.addStroke(new GestureDescription.StrokeDescription(
+                path, 0, 10));
+
+        dispatchGesture(builder.build(), null, null);
+        Log.d(TAG,"The node is clicked");
+    }
+
+    // 递归查找指定坐标的节点
+    private AccessibilityNodeInfo findNodeAt(AccessibilityNodeInfo root, int x, int y) {
+        if (root == null) return null;
+
+        Rect bounds = new Rect();
+        root.getBoundsInScreen(bounds);
+
+        if (!bounds.contains(x, y)) {
+            return null;
+        }
+
+        for (int i = 0; i < root.getChildCount(); i++) {
+            AccessibilityNodeInfo child = root.getChild(i);
+            AccessibilityNodeInfo found = findNodeAt(child, x, y);
+            if (found != null) {
+                return found;
+            }
+        }
+
+        return root;
     }
 
     private List<AccessibilityNodeInfo> findClickableNodes(AccessibilityNodeInfo node) {
@@ -135,7 +186,7 @@ public class MyAccessibilityService extends AccessibilityService {
 
     @Override
     public void onInterrupt (){
-
+        circleOverlay.hideCircle();
     }
 
     public void reload(){
@@ -178,19 +229,20 @@ public class MyAccessibilityService extends AccessibilityService {
         }
     }
     private void performYouTubeSearchClick(float x, float y) {
-        Log.d(TAG,"Ready Click");
         Path clickPath = new Path();
         clickPath.moveTo(x, y);
 
         GestureDescription.Builder builder = new GestureDescription.Builder();
         builder.addStroke(new GestureDescription.StrokeDescription(
-                clickPath, 0, 5)); // 100ms點擊持續時間
+                clickPath, 0, 100)); // 100ms點擊持續時間
 
         boolean dispatched = dispatchGesture(builder.build(), new GestureResultCallback() {
             @Override
             public void onCompleted(GestureDescription gestureDescription) {
                 super.onCompleted(gestureDescription);
                 Log.i(TAG, "Handle Successful");
+                circleOverlay.hideCircle(); // 先移除之前的圆形
+                circleOverlay.showCircle(730, 1946); // 在新位置绘制圆形
             }
 
             @Override
