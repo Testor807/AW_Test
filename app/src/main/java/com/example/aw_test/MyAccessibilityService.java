@@ -1,6 +1,7 @@
 package com.example.aw_test;
 
 import android.accessibilityservice.AccessibilityService;
+import android.accessibilityservice.AccessibilityServiceInfo;
 import android.accessibilityservice.GestureDescription;
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
@@ -35,7 +36,7 @@ public class MyAccessibilityService extends AccessibilityService {
         circleOverlay = new CircleOverlay(this);
         switch (event.getEventType()) {
             case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
-                Log.d(TAG,"WINDOW_STATE_CHANGED");
+                Log.d(TAG, "WINDOW_STATE_CHANGED");
                 CheckInfo(event);
                 //reload();
                 action();
@@ -43,6 +44,16 @@ public class MyAccessibilityService extends AccessibilityService {
             case AccessibilityEvent.TYPE_VIEW_SCROLLED:
                 // 处理同一 Activity 内的动态内容更新
                 break;
+            case AccessibilityEvent.TYPE_VIEW_CLICKED:
+                // 获取点击位置
+                AccessibilityNodeInfo nodeInfo = event.getSource();
+                if (nodeInfo != null) {
+                    Rect rect = new Rect();
+                    nodeInfo.getBoundsInScreen(rect);
+                    Log.d(TAG, "视图在屏幕中的位置: " + rect);
+                    Log.d(TAG, "视图中心位置: (" + (rect.centerX()) + ", " + (rect.centerY()) + ")");
+                    nodeInfo.recycle(); // 回收资源
+                }
         }
     }
     private void action(){
@@ -51,11 +62,16 @@ public class MyAccessibilityService extends AccessibilityService {
                 // 查找所有FrameLayout
                 try{
                     TimeUnit.SECONDS.sleep(3);
-                    List<AccessibilityNodeInfo> text = rootNode.findAccessibilityNodeInfosByViewId("cn.damai:id/project_detail_perform_time_tv");
+                    List<AccessibilityNodeInfo> text = rootNode.findAccessibilityNodeInfosByViewId("cn.damai:id/wanna_see_text");
                     if(text != null){
                         Log.d(TAG,"Text　Node :"+text.size());
-                        nodes = findNodesByClassName(rootNode,"android.widget.LinearLayout");
-                        Log.d(TAG,"Frame Size:"+nodes.size());
+                        nodes = findNodesByClassName(rootNode,"android.widget.FrameLayout");
+                        // 遍歷所有 FrameLayout 節點
+                        for(AccessibilityNodeInfo frameNode : nodes) {
+                            itemTexts = findNodesByClassName(frameNode, "android.view.View");
+                            Log.d(TAG, "LinearLayout Size:" + itemTexts.size());
+                            // 如果需要可以進一步處理找到的 LinearLayout
+                        }
                     }else{
                         Log.d(TAG,"Target Node Null");
                     }
@@ -101,6 +117,20 @@ public class MyAccessibilityService extends AccessibilityService {
                 Log.d(TAG,"rootnode null!");
             }
         }
+    }
+    @Override
+    protected void onServiceConnected() {
+        super.onServiceConnected();
+        // 配置服务的监听参数
+        AccessibilityServiceInfo info = new AccessibilityServiceInfo();
+        // 设置监听的事件类型，这里只监听点击事件
+        info.eventTypes = AccessibilityEvent.TYPE_VIEW_CLICKED;
+        // 设置反馈类型
+        info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
+        // 设置服务的重要性
+        //info.importance = AccessibilityServiceInfo.IMPORTANCE_DEFAULT;
+
+        setServiceInfo(info);
     }
 
     private void performClickAtPosition2(int x, int y) {
